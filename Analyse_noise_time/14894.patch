@@ -1,0 +1,51 @@
+diff -r f4a7e738ad24 Lib/distutils/tests/test_version.py
+--- a/Lib/distutils/tests/test_version.py	Mon May 28 17:01:17 2012 +0100
++++ b/Lib/distutils/tests/test_version.py	Sun Jun 03 17:33:36 2012 +0200
+@@ -55,7 +55,10 @@
+                     ('3.2.pl0', '3.1.1.6', 1),
+                     ('2g6', '11g', -1),
+                     ('0.960923', '2.2beta29', -1),
+-                    ('1.13++', '5.5.kw', -1))
++                    ('1.13++', '5.5.kw', -1),
++                    ('a.12.b.c', 'a.b.3', -1),
++                    ('1.0', '1', 1),
++                    ('1', '1.0', -1))
+ 
+ 
+         for v1, v2, wanted in versions:
+diff -r f4a7e738ad24 Lib/distutils/version.py
+--- a/Lib/distutils/version.py	Mon May 28 17:01:17 2012 +0100
++++ b/Lib/distutils/version.py	Sun Jun 03 17:33:36 2012 +0200
+@@ -28,6 +28,8 @@
+ 
+ import re
+ 
++from itertools import zip_longest
++
+ class Version:
+     """Abstract base class for version numbering classes.  Just provides
+     constructor (__init__) and reproducer (__repr__), because those
+@@ -338,12 +340,16 @@
+         if isinstance(other, str):
+             other = LooseVersion(other)
+ 
+-        if self.version == other.version:
+-            return 0
+-        if self.version < other.version:
+-            return -1
+-        if self.version > other.version:
+-            return 1
+-
++        for i, j in zip_longest(self.version, other.version, fillvalue=''):
++            if type(i) != type(j):
++                i = str(i)
++                j = str(j)
++            if i == j:
++                continue
++            elif i < j:
++                return -1
++            else:  # i > j
++                return 1
++        return 0
+ 
+ # end class LooseVersion
